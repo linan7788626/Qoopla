@@ -6,9 +6,9 @@ def gauss_2d(x, y, par):
     xo = par[0]
     yo = par[1]
     amplitude = par[3]
-    sigma_x = par[2]/par[4]#*0.693
+    sigma_x = par[2]#/par[4]#*0.693
     sigma_y = par[2]*par[4]#*0.693
-    theta = np.deg2rad(par[5])
+    theta = -np.deg2rad(par[5])
     offset = 0.0
 
     a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
@@ -100,52 +100,3 @@ def lensed_images(x1, x2, lpar, gpar):
     g_lensimage = gauss_2d(yi1,yi2,gpar)
 
     return g_lensimage, g_srcsimage, mu, yi1, yi2
-##--------------------------------------------------------------------
-#if __name__ == '__main__':
-    #boxsize = 8.0 # (arcsec)
-    #nnn = 128
-    #dsx = boxsize/nnn
-
-    #xi1 = np.linspace(-boxsize/2.0,boxsize/2.0,nnn)+0.5*dsx
-    #xi2 = np.linspace(-boxsize/2.0,boxsize/2.0,nnn)+0.5*dsx
-    #xi1,xi2 = np.meshgrid(xi1,xi2)
-    ##----------------------------------------------------------------------
-    #l_xcen = 0.0    # x position of center (also try (0.0,0.14)
-    #l_ycen = 0.0    # y position of center
-    #l_re = 2.0   # Einstein radius of lens.
-    #l_rc = 0.0   # Core size of lens (in units of Einstein radius).
-    #l_axrat = 0.7   # Axis ratio of lens.
-    #l_pa = 49.0   # Orintation of lens.
-
-    #lpar = np.asarray([l_xcen,l_ycen,l_re,l_rc,l_axrat,l_pa])
-    ##----------------------------------------------------------------------
-    #g_amp = 1.0     # peak brightness value
-    #g_sig = 0.1     # Gaussian "sigma" (i.e., size)
-    #g_xcen = 0.0    # x position of center (also try (0.0,0.14)
-    #g_ycen = 0.0    # y position of center
-    #g_axrat = 0.7   # minor-to-major axis ratio
-    #g_pa = 45.0     # major-axis position angle (degrees) c.c.w. from x axis
-
-    #gpar = np.asarray([g_xcen,g_ycen,g_sig,g_amp,g_axrat,g_pa])
-    ##----------------------------------------------------------------------
-    #g_source = 0.0*xi1
-    #g_limage = 0.0*xi1
-    #mua = 0.0*xi1
-    #g_limage,g_source,mua,yi1,yi2 = lensed_images(xi1,xi2,lpar,gpar)
-
-    ##--------------------------lens images contour------------------------
-    #levels = [0.5,]
-    #pl.figure(num=None,figsize=(10,5),dpi=80, facecolor='w', edgecolor='k')
-
-    #a = pl.axes([0.05,0.1,0.4,0.8])
-    #a.set_xlim(-boxsize/2.0,boxsize/2.0)
-    #a.set_ylim(-boxsize/2.0,boxsize/2.0)
-    #a.contour(xi1,xi2,g_source,levels,colors=('b'))
-    #a.contour(yi1,yi2,mua,0,colors=('g'),linewidths = 2.0)
-
-    #b = pl.axes([0.55,0.1,0.4,0.8])
-    #b.set_xlim(-boxsize/2.0,boxsize/2.0)
-    #b.set_ylim(-boxsize/2.0,boxsize/2.0)
-    #b.contour(xi1,xi2,g_limage,levels,colors=('b'))
-    #b.contour(xi1,xi2,mua,colors=('r'),linewidths = 2.0)
-    #pl.show()

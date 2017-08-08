@@ -46,7 +46,7 @@ def create_images((x1,x2),xc1,xc2,re,rc,ql,phl,yc1,yc2,sigs,amp,qs,phs):
         ql = 1.0/ql
         phl = phl + 90
 
-    sig1 = sigs/qs#*0.693
+    sig1 = sigs#/qs#*0.693
     sig2 = sigs*qs#*0.693
     al1, al2 = lensing_signals_sie(x1, x2, xc1, xc2, re, 0.0, ql, phl)
 
