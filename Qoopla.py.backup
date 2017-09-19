@@ -15,16 +15,58 @@ import pylab as pl
 from PIL import Image
 import ofits as ff
 
+bsz = 5.0 # (arcsec)
+nnn = 400
+dsx = bsz/nnn
+
 nbins = 200
+nsbox = 100
+
+re_max = 3.0
+bpl = bsz
+dpl = bpl/nbins
+xbc1 = 0.0
+xbc2 = 0.0
+x1_min = -bsz/2.0+dpl/2.0+xbc1/2.0
+x1_max =  bsz/2.0-dpl/2.0-xbc1/2.0
+x2_min = -bsz/2.0+dpl/2.0+xbc2/2.0
+x2_max =  bsz/2.0-dpl/2.0-xbc2/2.0
+ql_max = 1.0
+la_max = 360.
+
+rh_max = 0.5
+bps = bsz/4.0
+dps = bps/nbins
+ybc1 = 0.0
+ybc2 = 0.0
+y1_min = -bps/2.0+dps/2.0+ybc1/2.0
+y1_max =  bps/2.0-dps/2.0-ybc1/2.0
+y2_min = -bps/2.0+dps/2.0+ybc2/2.0
+y2_max =  bps/2.0-dps/2.0-ybc2/2.0
+
+qs_max = 1.0
+sa_max = 360.
+
+st_re = nbins/2
+st_x1 = nbins/2
+st_x2 = nbins/2
+st_rc = 0*nbins
+st_ql = nbins*3./4
+st_la = nbins/3
+st_rh = nbins/2
+st_y1 = nbins/2
+st_y2 = nbins/2
+st_am = 0*nbins
+st_qs = nbins/2
+st_sa = nbins/3
+
+slider_len = 270
+sbox_len = 70
 
 class AppForm(QMainWindow):
     def __init__(self, parent=None):
-        self.bsz = 5.0 # (arcsec)
-        self.nnn = 400
-        self.dsx = self.bsz/self.nnn
-
-        self.xi1 = np.linspace(-self.bsz/2.0,self.bsz/2.0,self.nnn)+0.5*self.dsx
-        self.xi2 = np.linspace(-self.bsz/2.0,self.bsz/2.0,self.nnn)+0.5*self.dsx
+        self.xi1 = np.linspace(x1_min, x1_max, nnn)
+        self.xi2 = np.linspace(x2_min, x2_max, nnn)
         self.xi1,self.xi2 = np.meshgrid(self.xi1,self.xi2)
 
         self.file_name = "./ering.jpg"
@@ -32,31 +74,22 @@ class AppForm(QMainWindow):
         a_tmp = np.array(a_tmp)
         self.lgals = np.flipud(a_tmp[:,:,0]/256.0)
 
+        # self.file_name = "./ds9_images_500.png"
+        # a_tmp = Image.open(self.file_name)
+        # a_tmp = np.array(a_tmp)
+        # self.lgals = np.flipud(a_tmp[:,:,0]/256.0)
+
         # self.srcs_name = "./ds9_srcs_500.png"
         # s_tmp = Image.open(self.srcs_name)
         # s_tmp = np.array(s_tmp)
-        # # # sgals_tmp = (s_tmp[:,:,0]+s_tmp[:,:,1]+s_tmp[:,:,2])/256.0/2.0
-        # # # sgals_tmp = (s_tmp[:,:,0])/256.0
-        # # self.sgals = self.lgals*0.0
-        # # xoff = -15
-        # # yoff = -10
-        # # self.sgals[200+xoff:233+xoff,200+yoff:233+yoff] = sgals_tmp
         # self.sgals = np.flipud(s_tmp[:,:,0]/256.0)
 
-        st_re = nbins/2
-        st_x1 = nbins/2
-        st_x2 = nbins/2
-        st_rc = 0*nbins
-        st_ql = nbins/2
-        st_pa = nbins/3
-
-        # self.lpar = np.asarray([(st_x1*self.bsz/nbins-self.bsz/2.0),(st_x2*self.bsz/nbins-self.bsz/2.0),st_re*4.0/nbins,st_rc*0.0,st_ql*1.0/nbins,st_pa*360.0/nbins])
-        self.lpar = np.asarray([(st_x1*self.bsz/nbins-self.bsz/2.0 + self.bsz/nbins/2.0),
-                                (st_x2*self.bsz/nbins-self.bsz/2.0 + self.bsz/nbins/2.0),
-                                st_re*2.0/nbins, st_rc*0.0, st_ql*1.0/nbins, st_pa*360.0/nbins])
-        self.spar = np.asarray([(st_x1*self.bsz/nbins-self.bsz/2.0 + self.bsz/nbins/2.0),
-                                (st_x2*self.bsz/nbins-self.bsz/2.0 + self.bsz/nbins/2.0),
-                                st_re*2.0/nbins, 1.0, st_ql*1.0/nbins, st_pa*360.0/nbins])
+        self.lpar = np.asarray([(st_x1*dpl + x1_min),
+                                (st_x2*dpl + x2_min),
+                                st_re*re_max/nbins, st_rc*0.0, st_ql*ql_max/nbins, st_la*la_max/nbins])
+        self.spar = np.asarray([(st_y1*dps + y1_min),
+                                (st_y2*dps + y2_min),
+                                st_rh*rh_max/nbins, st_sa+1.0, st_qs*qs_max/nbins, st_sa*sa_max/nbins])
         #----------------------------------------------------------------------
         QMainWindow.__init__(self, parent)
         self.setWindowTitle('Interactive Lens Modeling')
@@ -67,9 +100,6 @@ class AppForm(QMainWindow):
 
         self.textbox.setText('67.26 0.32 0.68')
         self.on_draw()
-
-        #= QLabel("Re = %.2f" % self.lpar[2])
-        #label_nombre.setText("hola")
 
     def save_plot(self):
         file_choices = "PNG (*.png)|*.png"
@@ -109,63 +139,122 @@ class AppForm(QMainWindow):
         """ Redraws the figure
         """
 
-        l_xcen = self.slider_x1.value()*self.bsz/nbins-self.bsz/2.0 + self.bsz/nbins/2.0  	# x position of center (also try (0.0,0.14)
-        l_ycen = self.slider_x2.value()*self.bsz/nbins-self.bsz/2.0 + self.bsz/nbins/2.0 	# y position of center
-        l_re = self.slider_re.value()*2.0/nbins   # Einstein radius of lens.
+        l_xcen = self.slider_x1.value()*dpl+x1_min  	# x position of center (also try (0.0,0.14)
+        l_ycen = self.slider_x2.value()*dpl+x2_min 	# y position of center
+        l_re = self.slider_re.value()*re_max/nbins   # Einstein radius of lens.
         l_rc = 0.0   # Core size of lens (in units of Einstein radius).
-        l_axrat = self.slider_ql.value()*1.0/nbins   # Axis ratio of lens.
-        l_pa = self.slider_la.value()*360.0/nbins  # Orintation of lens.
+        l_axrat = self.slider_ql.value()*ql_max/nbins   # Axis ratio of lens.
+        l_pa = self.slider_la.value()*la_max/nbins  # Orintation of lens.
 
         self.lpar = np.asarray([l_xcen,l_ycen,l_re,l_rc,l_axrat,l_pa])
         #----------------------------------------------------------------------
         g_amp = 1.0   	# peak brightness value
-        g_sig = self.slider_rh.value()*0.5/nbins  	# Gaussian "sigma" (i.e., size)
-        g_xcen =  self.slider_y1.value()*self.bsz/4.0/nbins-self.bsz/8.0 + self.bsz/nbins/8.0 	# x position of center (also try (0.0,0.14)
-        g_ycen =  self.slider_y2.value()*self.bsz/4.0/nbins-self.bsz/8.0 + self.bsz/nbins/8.0 	# y position of center
-        g_axrat =  self.slider_qs.value()*1.0/nbins 	# minor-to-major axis ratio
-        g_pa =  self.slider_sa.value()*360.0/nbins      	# major-axis position angle (degrees) c.c.w. from x axis
+        g_sig = self.slider_rh.value()*rh_max/nbins  	# Gaussian "sigma" (i.e., size)
+        g_xcen =  self.slider_y1.value()*dps+y1_min 	# x position of center (also try (0.0,0.14)
+        g_ycen =  self.slider_y2.value()*dps+y2_min 	# y position of center
+        g_axrat =  self.slider_qs.value()*qs_max/nbins 	# minor-to-major axis ratio
+        g_pa =  self.slider_sa.value()*sa_max/nbins      	# major-axis position angle (degrees) c.c.w. from x axis
 
         self.spar = np.asarray([g_xcen,g_ycen,g_sig,g_amp,g_axrat,g_pa])
 
-        print "plot***", self.spar
         #----------------------------------------------------------------------
         g_limage,g_source,mua,yi1,yi2 = ll.lensed_images(self.xi1,self.xi2,self.lpar,self.spar)
         #--------------------------lens images contour------------------------
 
         levels = [0.5,]
-        # levels_imgs = [0.0,0.08,0.1,0.2,0.3,0.4,0.5]
+        levels_imgs = [0.0,0.08,0.1,0.2,0.3,0.4,0.5]
 
         self.axesa.clear()
-        self.axesa.set_xlim(-self.bsz/8.0,self.bsz/8.0)
-        self.axesa.set_ylim(-self.bsz/8.0,self.bsz/8.0)
-        self.axesa.set_xticks([-0.4, -0.2, 0.0, 0.2, 0.4])
-        self.axesa.set_yticks([-0.4, -0.2, 0.0, 0.2, 0.4])
+        self.axesa.set_xlim(y1_min,y1_max)
+        self.axesa.set_ylim(y2_min,y2_max)
+        self.axesa.set_xticks([ybc1-0.4, ybc1-0.2, ybc1, ybc1+0.2, ybc1+0.4])
+        self.axesa.set_yticks([ybc2-0.4, ybc2-0.2, ybc2, ybc2+0.2, ybc2+0.4])
         # self.axesa.contourf(self.xi1,self.xi2,self.sgals,levels_imgs,cmap=pl.cm.gray)
         self.axesa.contour(self.xi1,self.xi2,g_source,levels,colors=('deepskyblue'))
         self.axesa.contour(yi1,yi2,mua,0,colors=('r'),linewidths = 2.0)
 
         self.axesb.clear()
-        self.axesb.set_xlim(-self.bsz/2.0,self.bsz/2.0)
-        self.axesb.set_ylim(-self.bsz/2.0,self.bsz/2.0)
-        self.axesb.set_xticks([-2, -1, 0, 1, 2])
-        self.axesb.set_yticks([-2, -1, 0, 1, 2])
-        self.axesb.contourf(self.xi1,self.xi2,self.lgals,cmap=pl.cm.gray)
+        self.axesb.set_xlim(x1_min,x1_max)
+        self.axesb.set_ylim(x2_min,x2_max)
+        self.axesb.set_xticks([xbc1-2, xbc1-1, xbc1, xbc1+1, xbc1+2])
+        self.axesb.set_yticks([xbc2-2, xbc2-1, xbc2, xbc2+1, xbc2+2])
+        self.axesb.contourf(self.xi1,self.xi2,self.lgals,levels_imgs,cmap=pl.cm.gray)
         self.axesb.contour(self.xi1,self.xi2,g_limage,levels,colors=('deepskyblue'))
         self.axesb.contour(self.xi1,self.xi2,mua,colors=('r'),linewidths = 2.0)
 
         self.canvas.draw()
 
-        self.slider_label_re.setText("Re = %.2f \'\'" % self.lpar[2])
-        self.slider_label_x1.setText("x1 = %.2f \'\'" % self.lpar[0])
-        self.slider_label_x2.setText("x2 = %.2f \'\'" % self.lpar[1])
-        self.slider_label_ql.setText("ql = %.2f" % self.lpar[4])
-        self.slider_label_la.setText("la = %.2f Deg" % self.lpar[5])
+#-------
+    def update_slider_re(self):
+        spinbox_value = round(self.sbox_re.value() / re_max * nbins)
+        self.slider_re.setSliderPosition(spinbox_value)
 
-        self.slider_label_rh.setText("Rh = %.2f \'\'" % self.spar[2])
-        self.slider_label_y1.setText("y1 = %.2f \'\'" % self.spar[0])
-        self.slider_label_y2.setText("y2 = %.2f \'\'" % self.spar[1])
-        self.slider_label_qs.setText("qs = %.2f" % self.spar[4])
-        self.slider_label_sa.setText("sa = %.2f Deg" % self.spar[5])
+    def update_sbox_re(self, value):
+        self.sbox_re.setValue(float(value) * re_max / nbins)
+#-------
+    def update_slider_x1(self):
+        spinbox_value = round((self.sbox_x1.value()-x1_min) / (x1_max-x1_min) * nbins)
+        self.slider_x1.setSliderPosition(spinbox_value)
+
+    def update_sbox_x1(self, value):
+        self.sbox_x1.setValue(float(value) * (x1_max-x1_min) / nbins + x1_min)
+#-------
+    def update_slider_x2(self):
+        spinbox_value = round((self.sbox_x2.value()-x2_min) / (x2_max-x2_min) * nbins)
+        self.slider_x2.setSliderPosition(spinbox_value)
+
+    def update_sbox_x2(self, value):
+        self.sbox_x2.setValue(float(value) * (x2_max-x2_min) / nbins + x2_min)
+#-------
+    def update_slider_ql(self):
+        spinbox_value = round(self.sbox_ql.value() / ql_max * nbins)
+        self.slider_ql.setSliderPosition(spinbox_value)
+
+    def update_sbox_ql(self, value):
+        self.sbox_ql.setValue(float(value) * ql_max / nbins)
+#-------
+    def update_slider_la(self):
+        spinbox_value = round(self.sbox_la.value() / la_max * nbins)
+        self.slider_la.setSliderPosition(spinbox_value)
+
+    def update_sbox_la(self, value):
+        self.sbox_la.setValue(float(value) * la_max / nbins)
+#-------
+    def update_slider_rh(self):
+        spinbox_value = round(self.sbox_rh.value() / rh_max * nbins)
+        self.slider_rh.setSliderPosition(spinbox_value)
+
+    def update_sbox_rh(self, value):
+        self.sbox_rh.setValue(float(value) * rh_max / nbins)
+#-------
+    def update_slider_y1(self):
+        spinbox_value = round((self.sbox_y1.value()-y1_min) / (y1_max-y1_min) * nbins)
+        self.slider_y1.setSliderPosition(spinbox_value)
+
+    def update_sbox_y1(self, value):
+        self.sbox_y1.setValue(float(value) * (y1_max-y1_min) / nbins + y1_min)
+#-------
+    def update_slider_y2(self):
+        spinbox_value = round((self.sbox_y2.value()-y2_min) / (y2_max-y2_min) * nbins)
+        self.slider_y2.setSliderPosition(spinbox_value)
+
+    def update_sbox_y2(self, value):
+        self.sbox_y2.setValue(float(value) * (y2_max-y2_min) / nbins + y2_min)
+#-------
+    def update_slider_qs(self):
+        spinbox_value = round(self.sbox_qs.value() / qs_max * nbins)
+        self.slider_qs.setSliderPosition(spinbox_value)
+
+    def update_sbox_qs(self, value):
+        self.sbox_qs.setValue(float(value) * qs_max / nbins)
+#-------
+    def update_slider_sa(self):
+        spinbox_value = round(self.sbox_sa.value() / sa_max * nbins)
+        self.slider_sa.setSliderPosition(spinbox_value)
+
+    def update_sbox_sa(self, value):
+        self.sbox_sa.setValue(float(value) * sa_max / nbins)
+#-------
 
     def create_main_frame(self):
         self.main_frame = QWidget()
@@ -177,8 +266,8 @@ class AppForm(QMainWindow):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_frame)
 
-        self.axesa = pl.axes([0.05,0.1,0.4,0.8])
-        self.axesb = pl.axes([0.55,0.1,0.4,0.8])
+        self.axesa = pl.axes([0.07,0.1,0.4,0.88])
+        self.axesb = pl.axes([0.57,0.1,0.4,0.88])
 
         # Bind the 'pick' event for clicking on one of the bars
         #
@@ -216,115 +305,217 @@ class AppForm(QMainWindow):
         #self.grid_cb.stateChanged.connect(self.on_draw) #int
 
 
-        self.slider_label_re = QLabel("Re: %.2f" % self.lpar[2])
+#-------
+        self.slider_label_re = QLabel("Re")
         self.slider_re = QSlider(Qt.Horizontal)
         self.slider_re.setFocusPolicy(Qt.StrongFocus)
-        self.slider_re.setMinimumWidth(270)
-        self.slider_re.setMaximumWidth(270)
-        self.slider_re.setRange(1, nbins)
-        self.slider_re.setValue(nbins/2)
+        self.slider_re.setMinimumWidth(slider_len)
+        self.slider_re.setMaximumWidth(slider_len)
+        self.slider_re.setRange(0, nbins)
+        self.slider_re.setValue(st_re)
         self.slider_re.setTracking(True)
-        #self.slider_re.setTickPosition(QSlider.TicksBothSides)
         self.slider_re.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_x1 = QLabel("x1: %.2f" % self.lpar[0])
+        self.sbox_re = QDoubleSpinBox()
+        self.sbox_re.setSingleStep(re_max/nsbox)
+        self.sbox_re.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_re.setMinimumWidth(sbox_len)
+        self.sbox_re.setMaximumWidth(sbox_len)
+        self.sbox_re.setRange(0, re_max)
+        self.sbox_re.setValue(re_max*st_re*1.0/nbins)
+
+        self.slider_re.valueChanged.connect(self.update_sbox_re)
+        self.sbox_re.editingFinished.connect(self.update_slider_re)
+#-------
+        self.slider_label_x1 = QLabel("x1")
         self.slider_x1 = QSlider(Qt.Horizontal)
         self.slider_x1.setFocusPolicy(Qt.StrongFocus)
-        self.slider_x1.setMinimumWidth(270)
-        self.slider_x1.setMaximumWidth(270)
-        self.slider_x1.setRange(1, nbins)
-        self.slider_x1.setValue(nbins/2)
+        self.slider_x1.setMinimumWidth(slider_len)
+        self.slider_x1.setMaximumWidth(slider_len)
+        self.slider_x1.setRange(0, nbins)
+        self.slider_x1.setValue(st_x1)
         self.slider_x1.setTracking(True)
-        #self.slider_x1.setTickPosition(QSlider.TicksBothSides)
         self.slider_x1.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_x2 = QLabel("x2: %.2f" % self.lpar[1])
+        self.sbox_x1 = QDoubleSpinBox()
+        self.sbox_x1.setSingleStep((x1_max-x1_min)/nsbox)
+        self.sbox_x1.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_x1.setMinimumWidth(sbox_len)
+        self.sbox_x1.setMaximumWidth(sbox_len)
+        self.sbox_x1.setRange(x1_min, x1_max)
+        self.sbox_x1.setValue(st_x1*dpl+x1_min)
+
+        self.slider_x1.valueChanged.connect(self.update_sbox_x1)
+        self.sbox_x1.editingFinished.connect(self.update_slider_x1)
+#-------
+        self.slider_label_x2 = QLabel("x2")
         self.slider_x2 = QSlider(Qt.Horizontal)
         self.slider_x2.setFocusPolicy(Qt.StrongFocus)
-        self.slider_x2.setMinimumWidth(270)
-        self.slider_x2.setMaximumWidth(270)
-        self.slider_x2.setRange(1, nbins)
-        self.slider_x2.setValue(nbins/2)
+        self.slider_x2.setMinimumWidth(slider_len)
+        self.slider_x2.setMaximumWidth(slider_len)
+        self.slider_x2.setRange(0, nbins)
+        self.slider_x2.setValue(st_x2)
         self.slider_x2.setTracking(True)
-        #self.slider_x2.setTickPosition(QSlider.TicksBothSides)
         self.slider_x2.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_ql = QLabel("ql: %.2f" % self.lpar[4])
+        self.sbox_x2 = QDoubleSpinBox()
+        self.sbox_x2.setSingleStep((x2_max-x2_min)/nsbox)
+        self.sbox_x2.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_x2.setMinimumWidth(sbox_len)
+        self.sbox_x2.setMaximumWidth(sbox_len)
+        self.sbox_x2.setRange(x2_min, x2_max)
+        self.sbox_x2.setValue(st_x2*dpl+x2_min)
+
+        self.slider_x2.valueChanged.connect(self.update_sbox_x2)
+        self.sbox_x2.editingFinished.connect(self.update_slider_x2)
+#-------
+        self.slider_label_ql = QLabel("ql")
         self.slider_ql = QSlider(Qt.Horizontal)
         self.slider_ql.setFocusPolicy(Qt.StrongFocus)
-        self.slider_ql.setMinimumWidth(270)
-        self.slider_ql.setMaximumWidth(270)
-        self.slider_ql.setRange(1, nbins)
-        self.slider_ql.setValue(nbins/2)
+        self.slider_ql.setMinimumWidth(slider_len)
+        self.slider_ql.setMaximumWidth(slider_len)
+        self.slider_ql.setRange(0, nbins)
+        self.slider_ql.setValue(st_ql)
         self.slider_ql.setTracking(True)
-        #self.slider_ql.setTickPosition(QSlider.TicksBothSides)
         self.slider_ql.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_la = QLabel("la: %.2f" % self.lpar[5])
+        self.sbox_ql = QDoubleSpinBox()
+        self.sbox_ql.setSingleStep(ql_max/nsbox)
+        self.sbox_ql.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_ql.setMinimumWidth(sbox_len)
+        self.sbox_ql.setMaximumWidth(sbox_len)
+        self.sbox_ql.setRange(0, ql_max)
+        self.sbox_ql.setValue(ql_max*st_ql*1.0/nbins)
+
+        self.slider_ql.valueChanged.connect(self.update_sbox_ql)
+        self.sbox_ql.editingFinished.connect(self.update_slider_ql)
+#-------
+        self.slider_label_la = QLabel("la")
         self.slider_la = QSlider(Qt.Horizontal)
         self.slider_la.setFocusPolicy(Qt.StrongFocus)
-        self.slider_la.setMinimumWidth(270)
-        self.slider_la.setMaximumWidth(270)
-        self.slider_la.setRange(1, nbins)
-        self.slider_la.setValue(nbins/3)
+        self.slider_la.setMinimumWidth(slider_len)
+        self.slider_la.setMaximumWidth(slider_len)
+        self.slider_la.setRange(0, nbins)
+        self.slider_la.setValue(st_la)
         self.slider_la.setTracking(True)
-        #self.slider_la.setTickPosition(QSlider.TicksBothSides)
         self.slider_la.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_rh = QLabel("Rh: %.2f" % self.spar[2])
+        self.sbox_la = QDoubleSpinBox()
+        self.sbox_la.setSingleStep(la_max/nsbox)
+        self.sbox_la.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_la.setMinimumWidth(sbox_len)
+        self.sbox_la.setMaximumWidth(sbox_len)
+        self.sbox_la.setRange(0, la_max)
+        self.sbox_la.setValue(la_max*st_la*1.0/nbins)
+
+        self.slider_la.valueChanged.connect(self.update_sbox_la)
+        self.sbox_la.editingFinished.connect(self.update_slider_la)
+#-------
+        self.slider_label_rh = QLabel("Rh")
         self.slider_rh = QSlider(Qt.Horizontal)
         self.slider_rh.setFocusPolicy(Qt.StrongFocus)
-        self.slider_rh.setMinimumWidth(270)
-        self.slider_rh.setMaximumWidth(270)
-        self.slider_rh.setRange(1, nbins)
-        self.slider_rh.setValue(nbins/2)
+        self.slider_rh.setMinimumWidth(slider_len)
+        self.slider_rh.setMaximumWidth(slider_len)
+        self.slider_rh.setRange(0, nbins)
+        self.slider_rh.setValue(st_rh)
         self.slider_rh.setTracking(True)
-        #self.slider_rh.setTickPosition(QSlider.TicksBothSides)
         self.slider_rh.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_y1 = QLabel("y1: %.2f" % self.spar[0])
+        self.sbox_rh = QDoubleSpinBox()
+        self.sbox_rh.setSingleStep(rh_max/nsbox)
+        self.sbox_rh.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_rh.setMinimumWidth(sbox_len)
+        self.sbox_rh.setMaximumWidth(sbox_len)
+        self.sbox_rh.setRange(0, rh_max)
+        self.sbox_rh.setValue(rh_max*st_rh*1.0/nbins)
+
+        self.slider_rh.valueChanged.connect(self.update_sbox_rh)
+        self.sbox_rh.editingFinished.connect(self.update_slider_rh)
+#-------
+        self.slider_label_y1 = QLabel("y1")
         self.slider_y1 = QSlider(Qt.Horizontal)
         self.slider_y1.setFocusPolicy(Qt.StrongFocus)
-        self.slider_y1.setMinimumWidth(270)
-        self.slider_y1.setMaximumWidth(270)
-        self.slider_y1.setRange(1, nbins)
-        self.slider_y1.setValue(nbins/2)
+        self.slider_y1.setMinimumWidth(slider_len)
+        self.slider_y1.setMaximumWidth(slider_len)
+        self.slider_y1.setRange(0, nbins)
+        self.slider_y1.setValue(st_y1)
         self.slider_y1.setTracking(True)
-        #self.slider_y1.setTickPosition(QSlider.TicksBothSides)
         self.slider_y1.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_y2 = QLabel("y2: %.2f" % self.spar[1])
+        self.sbox_y1 = QDoubleSpinBox()
+        self.sbox_y1.setSingleStep((y1_max-y1_min)/nsbox)
+        self.sbox_y1.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_y1.setMinimumWidth(sbox_len)
+        self.sbox_y1.setMaximumWidth(sbox_len)
+        self.sbox_y1.setRange(y1_min, y1_max)
+        self.sbox_y1.setValue(st_y1*dps+y1_min)
+
+        self.slider_y1.valueChanged.connect(self.update_sbox_y1)
+        self.sbox_y1.editingFinished.connect(self.update_slider_y1)
+#-------
+        self.slider_label_y2 = QLabel("y2")
         self.slider_y2 = QSlider(Qt.Horizontal)
         self.slider_y2.setFocusPolicy(Qt.StrongFocus)
-        self.slider_y2.setMinimumWidth(270)
-        self.slider_y2.setMaximumWidth(270)
-        self.slider_y2.setRange(1, nbins)
-        self.slider_y2.setValue(nbins/2)
+        self.slider_y2.setMinimumWidth(slider_len)
+        self.slider_y2.setMaximumWidth(slider_len)
+        self.slider_y2.setRange(0, nbins)
+        self.slider_y2.setValue(st_y2)
         self.slider_y2.setTracking(True)
-        #self.slider_y2.setTickPosition(QSlider.TicksBothSides)
         self.slider_y2.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_qs = QLabel("qs: %.2f" % self.spar[4])
+        self.sbox_y2 = QDoubleSpinBox()
+        self.sbox_y2.setSingleStep((y2_max-y2_min)/nsbox)
+        self.sbox_y2.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_y2.setMinimumWidth(sbox_len)
+        self.sbox_y2.setMaximumWidth(sbox_len)
+        self.sbox_y2.setRange(y2_min, y2_max)
+        self.sbox_y2.setValue(st_y2*dps+y2_min)
+
+        self.slider_y2.valueChanged.connect(self.update_sbox_y2)
+        self.sbox_y2.editingFinished.connect(self.update_slider_y2)
+#-------
+        self.slider_label_qs = QLabel("qs")
         self.slider_qs = QSlider(Qt.Horizontal)
         self.slider_qs.setFocusPolicy(Qt.StrongFocus)
-        self.slider_qs.setMinimumWidth(270)
-        self.slider_qs.setMaximumWidth(270)
-        self.slider_qs.setRange(1, nbins)
-        self.slider_qs.setValue(nbins/2)
+        self.slider_qs.setMinimumWidth(slider_len)
+        self.slider_qs.setMaximumWidth(slider_len)
+        self.slider_qs.setRange(0, nbins)
+        self.slider_qs.setValue(st_qs)
         self.slider_qs.setTracking(True)
-        #self.slider_qs.setTickPosition(QSlider.TicksBothSides)
         self.slider_qs.valueChanged.connect(self.on_draw)#int
 
-        self.slider_label_sa = QLabel("sa: %.2f" % self.spar[5])
+        self.sbox_qs = QDoubleSpinBox()
+        self.sbox_qs.setSingleStep(qs_max/nsbox)
+        self.sbox_qs.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_qs.setMinimumWidth(sbox_len)
+        self.sbox_qs.setMaximumWidth(sbox_len)
+        self.sbox_qs.setRange(0.0, qs_max)
+        self.sbox_qs.setValue(qs_max*st_qs*1.0/nbins)
+
+        self.slider_qs.valueChanged.connect(self.update_sbox_qs)
+        self.sbox_qs.editingFinished.connect(self.update_slider_qs)
+#-------
+        self.slider_label_sa = QLabel("sa")
         self.slider_sa = QSlider(Qt.Horizontal)
         self.slider_sa.setFocusPolicy(Qt.StrongFocus)
-        self.slider_sa.setMinimumWidth(270)
-        self.slider_sa.setMaximumWidth(270)
-        self.slider_sa.setRange(1, nbins)
-        self.slider_sa.setValue(nbins/3)
+        self.slider_sa.setMinimumWidth(slider_len)
+        self.slider_sa.setMaximumWidth(slider_len)
+        self.slider_sa.setRange(0, nbins)
+        self.slider_sa.setValue(st_sa)
         self.slider_sa.setTracking(True)
-        #self.slider_sa.setTickPosition(QSlider.TicksBothSides)
         self.slider_sa.valueChanged.connect(self.on_draw)#int
+
+        self.sbox_sa = QDoubleSpinBox()
+        self.sbox_sa.setSingleStep(sa_max/nsbox)
+        self.sbox_sa.setFocusPolicy(Qt.StrongFocus)
+        self.sbox_sa.setMinimumWidth(sbox_len)
+        self.sbox_sa.setMaximumWidth(sbox_len)
+        self.sbox_sa.setRange(0.0, sa_max)
+        self.sbox_sa.setValue(sa_max*st_sa*1.0/nbins)
+
+        self.slider_sa.valueChanged.connect(self.update_sbox_sa)
+        self.sbox_sa.editingFinished.connect(self.update_slider_sa)
+#-------
 
         #
         # Layout with box sizers
@@ -340,27 +531,27 @@ class AppForm(QMainWindow):
         vbox.addWidget(self.canvas)
 
         hbox_s1 = QHBoxLayout()
-        for w in [self.slider_label_re, self.slider_re, self.slider_label_rh, self.slider_rh]:
+        for w in [self.slider_label_re, self.sbox_re, self.slider_re, self.slider_label_rh, self.sbox_rh, self.slider_rh]:
             hbox_s1.addWidget(w)
             hbox_s1.setAlignment(w, Qt.AlignLeft)
 
         hbox_s2 = QHBoxLayout()
-        for w in [self.slider_label_x1, self.slider_x1, self.slider_label_y1, self.slider_y1]:
+        for w in [self.slider_label_x1, self.sbox_x1, self.slider_x1, self.slider_label_y1, self.sbox_y1, self.slider_y1]:
             hbox_s2.addWidget(w)
             hbox_s2.setAlignment(w, Qt.AlignLeft)
 
         hbox_s3 = QHBoxLayout()
-        for w in [self.slider_label_x2, self.slider_x2, self.slider_label_y2, self.slider_y2]:
+        for w in [self.slider_label_x2, self.sbox_x2, self.slider_x2, self.slider_label_y2, self.sbox_y2, self.slider_y2]:
             hbox_s3.addWidget(w)
             hbox_s3.setAlignment(w, Qt.AlignLeft)
 
         hbox_s4 = QHBoxLayout()
-        for w in [self.slider_label_ql, self.slider_ql, self.slider_label_qs, self.slider_qs]:
+        for w in [self.slider_label_ql, self.sbox_ql, self.slider_ql, self.slider_label_qs, self.sbox_qs, self.slider_qs]:
             hbox_s4.addWidget(w)
             hbox_s4.setAlignment(w, Qt.AlignLeft)
 
         hbox_s5 = QHBoxLayout()
-        for w in [self.slider_label_la, self.slider_la, self.slider_label_sa, self.slider_sa]:
+        for w in [self.slider_label_la, self.sbox_la, self.slider_la, self.slider_label_sa, self.sbox_sa, self.slider_sa]:
             hbox_s5.addWidget(w)
             hbox_s5.setAlignment(w, Qt.AlignLeft)
 
@@ -383,35 +574,35 @@ class AppForm(QMainWindow):
         g_limage,g_source,mua,yi1,yi2 = ll.lensed_images(self.xi1,self.xi2,lpar_new,spar_new)
         print "Done."
 
-        self.slider_re.setValue(round(lpar_new[2]/2.0*nbins))
-        self.slider_x1.setValue(round((lpar_new[0]+self.bsz/2.0-self.bsz/nbins/2.0)/self.bsz*nbins))
-        self.slider_x2.setValue(round((lpar_new[1]+self.bsz/2.0-self.bsz/nbins/2.0)/self.bsz*nbins))
-        self.slider_ql.setValue(round(lpar_new[4]*nbins))
-        self.slider_la.setValue(round(lpar_new[5]/360.0*nbins))
+        self.slider_re.setValue(round(lpar_new[2]/re_max*nbins))
+        self.slider_x1.setValue(round((lpar_new[0]-x1_min)/dpl))
+        self.slider_x2.setValue(round((lpar_new[1]-x2_min)/dpl))
+        self.slider_ql.setValue(round(lpar_new[4]/ql_max*nbins))
+        self.slider_la.setValue(round(lpar_new[5]/la_max*nbins))
 
-        self.slider_rh.setValue(round(spar_new[2]/0.5*nbins))
-        self.slider_y1.setValue(round((spar_new[0]+self.bsz/8.0-self.bsz/nbins/8.0)/(self.bsz/4.0)*nbins))
-        self.slider_y2.setValue(round((spar_new[1]+self.bsz/8.0-self.bsz/nbins/8.0)/(self.bsz/4.0)*nbins))
-        self.slider_qs.setValue(round(spar_new[4]*nbins))
-        self.slider_sa.setValue(round(spar_new[5]/360.0*nbins))
+        self.slider_rh.setValue(round(spar_new[2]/rh_max*nbins))
+        self.slider_y1.setValue(round((spar_new[0]-y1_min)/dps))
+        self.slider_y2.setValue(round((spar_new[1]-y2_min)/dps))
+        self.slider_qs.setValue(round(spar_new[4]/qs_max*nbins))
+        self.slider_sa.setValue(round(spar_new[5]/sa_max*nbins))
 
         levels = [0.5,]
-        # levels_imgs = [0.0,0.08,0.1,0.2,0.3,0.4,0.5]
+        levels_imgs = [0.0,0.08,0.1,0.2,0.3,0.4,0.5]
         self.axesa.clear()
-        self.axesa.set_xlim(-self.bsz/8.0,self.bsz/8.0)
-        self.axesa.set_ylim(-self.bsz/8.0,self.bsz/8.0)
-        self.axesa.set_xticks([-0.4, -0.2, 0.0, 0.2, 0.4])
-        self.axesa.set_yticks([-0.4, -0.2, 0.0, 0.2, 0.4])
+        self.axesa.set_xlim(y1_min,y1_max)
+        self.axesa.set_ylim(y2_min,y2_max)
+        self.axesa.set_xticks([ybc1-0.4, ybc1-0.2, ybc1, ybc1+0.2, ybc1+0.4])
+        self.axesa.set_yticks([ybc2-0.4, ybc2-0.2, ybc2, ybc2+0.2, ybc2+0.4])
         # self.axesa.contourf(self.xi1,self.xi2,self.sgals,levels_imgs,cmap=pl.cm.gray)
         self.axesa.contour(self.xi1,self.xi2,g_source,levels,colors=('deepskyblue'))
-        self.axesa.contour(yi1,yi2,mua,0,colors=('g'),linewidths = 2.0)
+        self.axesa.contour(yi1,yi2,mua,0,colors=('r'),linewidths = 2.0)
 
         self.axesb.clear()
-        self.axesb.set_xlim(-self.bsz/2.0,self.bsz/2.0)
-        self.axesb.set_ylim(-self.bsz/2.0,self.bsz/2.0)
-        self.axesb.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
-        self.axesb.set_yticks([-2.0, -1.0, 0.0, 1.0, 2.0])
-        self.axesb.contourf(self.xi1,self.xi2,self.lgals,cmap=pl.cm.gray)
+        self.axesb.set_xlim(x1_min,x1_max)
+        self.axesb.set_ylim(x2_min,x2_max)
+        self.axesb.set_xticks([xbc1-2.0,xbc1-1.0,xbc1,xbc1+1.0,xbc1+2.0])
+        self.axesb.set_yticks([xbc2-2.0,xbc2-1.0,xbc2,xbc2+1.0,xbc2+2.0])
+        self.axesb.contourf(self.xi1,self.xi2,self.lgals,levels_imgs,cmap=pl.cm.gray)
         self.axesb.contour(self.xi1,self.xi2,g_limage,levels,colors=('deepskyblue'))
         self.axesb.contour(self.xi1,self.xi2,mua,colors=('r'),linewidths = 2.0)
 
