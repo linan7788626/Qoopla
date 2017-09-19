@@ -8,12 +8,14 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
+import json
 
 import lensing_libs as ll
 import numpy as np
 import pylab as pl
 from PIL import Image
 import ofits as ff
+
 
 bsz = 5.0 # (arcsec)
 nnn = 400
@@ -278,7 +280,8 @@ class AppForm(QMainWindow):
 
         # Other GUI controls
         #
-        self.sbox_label_h0 = QLabel("H0")
+        # self.sbox_label_h0 = QLabel(u'\u0048'u'\u0030')
+        self.sbox_label_h0 = QLabel("H<sub>0</sub>")
         self.sbox_label_h0.setFixedWidth(20)
         self.sbox_h0 = QDoubleSpinBox()
         self.sbox_h0.setSingleStep(100/nsbox)
@@ -287,7 +290,7 @@ class AppForm(QMainWindow):
         self.sbox_h0.setRange(0, 100)
         self.sbox_h0.setValue(68)
 
-        self.sbox_label_om = QLabel("OM")
+        self.sbox_label_om = QLabel(u'\u03a9'"<sub>m</sub>")
         self.sbox_label_om.setFixedWidth(20)
         self.sbox_om = QDoubleSpinBox()
         self.sbox_om.setSingleStep(1.0/nsbox)
@@ -296,7 +299,7 @@ class AppForm(QMainWindow):
         self.sbox_om.setRange(0, 1.0)
         self.sbox_om.setValue(0.3)
 
-        self.sbox_label_ol = QLabel("OL")
+        self.sbox_label_ol = QLabel(u'\u03a9'"<sub>"u'\u039b'"</sub>")
         self.sbox_label_ol.setFixedWidth(20)
         self.sbox_ol = QDoubleSpinBox()
         self.sbox_ol.setSingleStep(1.0/nsbox)
@@ -328,7 +331,7 @@ class AppForm(QMainWindow):
 
 
 #-------
-        self.slider_label_re = QLabel("Re")
+        self.slider_label_re = QLabel("R<sub>e</sub>")
         self.slider_re = QSlider(Qt.Horizontal)
         self.slider_re.setFocusPolicy(Qt.StrongFocus)
         self.slider_re.setFixedWidth(slider_len)
@@ -347,7 +350,7 @@ class AppForm(QMainWindow):
         self.slider_re.valueChanged.connect(self.update_sbox_re)
         self.sbox_re.editingFinished.connect(self.update_slider_re)
 #-------
-        self.slider_label_x1 = QLabel("x1")
+        self.slider_label_x1 = QLabel("x<sub>1</sub>")
         self.slider_x1 = QSlider(Qt.Horizontal)
         self.slider_x1.setFocusPolicy(Qt.StrongFocus)
         self.slider_x1.setFixedWidth(slider_len)
@@ -366,7 +369,7 @@ class AppForm(QMainWindow):
         self.slider_x1.valueChanged.connect(self.update_sbox_x1)
         self.sbox_x1.editingFinished.connect(self.update_slider_x1)
 #-------
-        self.slider_label_x2 = QLabel("x2")
+        self.slider_label_x2 = QLabel("x<sub>2</sub>")
         self.slider_x2 = QSlider(Qt.Horizontal)
         self.slider_x2.setFocusPolicy(Qt.StrongFocus)
         self.slider_x2.setFixedWidth(slider_len)
@@ -385,7 +388,7 @@ class AppForm(QMainWindow):
         self.slider_x2.valueChanged.connect(self.update_sbox_x2)
         self.sbox_x2.editingFinished.connect(self.update_slider_x2)
 #-------
-        self.slider_label_ql = QLabel("ql")
+        self.slider_label_ql = QLabel("q<sub>lens</sub>")
         self.slider_ql = QSlider(Qt.Horizontal)
         self.slider_ql.setFocusPolicy(Qt.StrongFocus)
         self.slider_ql.setFixedWidth(slider_len)
@@ -404,7 +407,7 @@ class AppForm(QMainWindow):
         self.slider_ql.valueChanged.connect(self.update_sbox_ql)
         self.sbox_ql.editingFinished.connect(self.update_slider_ql)
 #-------
-        self.slider_label_la = QLabel("la")
+        self.slider_label_la = QLabel(u'\u03b8'"<sub>lens</sub>")
         self.slider_la = QSlider(Qt.Horizontal)
         self.slider_la.setFocusPolicy(Qt.StrongFocus)
         self.slider_la.setFixedWidth(slider_len)
@@ -423,7 +426,7 @@ class AppForm(QMainWindow):
         self.slider_la.valueChanged.connect(self.update_sbox_la)
         self.sbox_la.editingFinished.connect(self.update_slider_la)
 #-------
-        self.slider_label_rh = QLabel("Rh")
+        self.slider_label_rh = QLabel("R<sub>half</sub>")
         self.slider_rh = QSlider(Qt.Horizontal)
         self.slider_rh.setFocusPolicy(Qt.StrongFocus)
         self.slider_rh.setFixedWidth(slider_len)
@@ -442,7 +445,7 @@ class AppForm(QMainWindow):
         self.slider_rh.valueChanged.connect(self.update_sbox_rh)
         self.sbox_rh.editingFinished.connect(self.update_slider_rh)
 #-------
-        self.slider_label_y1 = QLabel("y1")
+        self.slider_label_y1 = QLabel("y<sub>1</sub>")
         self.slider_y1 = QSlider(Qt.Horizontal)
         self.slider_y1.setFocusPolicy(Qt.StrongFocus)
         self.slider_y1.setFixedWidth(slider_len)
@@ -461,7 +464,7 @@ class AppForm(QMainWindow):
         self.slider_y1.valueChanged.connect(self.update_sbox_y1)
         self.sbox_y1.editingFinished.connect(self.update_slider_y1)
 #-------
-        self.slider_label_y2 = QLabel("y2")
+        self.slider_label_y2 = QLabel("y<sub>2</sub>")
         self.slider_y2 = QSlider(Qt.Horizontal)
         self.slider_y2.setFocusPolicy(Qt.StrongFocus)
         self.slider_y2.setFixedWidth(slider_len)
@@ -480,7 +483,7 @@ class AppForm(QMainWindow):
         self.slider_y2.valueChanged.connect(self.update_sbox_y2)
         self.sbox_y2.editingFinished.connect(self.update_slider_y2)
 #-------
-        self.slider_label_qs = QLabel("qs")
+        self.slider_label_qs = QLabel("q<sub>src</sub>")
         self.slider_qs = QSlider(Qt.Horizontal)
         self.slider_qs.setFocusPolicy(Qt.StrongFocus)
         self.slider_qs.setFixedWidth(slider_len)
@@ -499,7 +502,7 @@ class AppForm(QMainWindow):
         self.slider_qs.valueChanged.connect(self.update_sbox_qs)
         self.sbox_qs.editingFinished.connect(self.update_slider_qs)
 #-------
-        self.slider_label_sa = QLabel("sa")
+        self.slider_label_sa = QLabel(u'\u03b8'"<sub>src</sub>")
         self.slider_sa = QSlider(Qt.Horizontal)
         self.slider_sa.setFocusPolicy(Qt.StrongFocus)
         self.slider_sa.setFixedWidth(slider_len)
@@ -592,29 +595,35 @@ class AppForm(QMainWindow):
         self.slider_qs.setValue(round(spar_new[4]/qs_max*nbins))
         self.slider_sa.setValue(round(spar_new[5]/sa_max*nbins))
 
-        levels = [0.5,]
-        levels_imgs = [0.0,0.08,0.1,0.2,0.3,0.4,0.5]
-        self.axesa.clear()
-        self.axesa.set_xlim(y1_min,y1_max)
-        self.axesa.set_ylim(y2_min,y2_max)
-        self.axesa.set_xticks([ybc1-0.4, ybc1-0.2, ybc1, ybc1+0.2, ybc1+0.4])
-        self.axesa.set_yticks([ybc2-0.4, ybc2-0.2, ybc2, ybc2+0.2, ybc2+0.4])
-        # self.axesa.contourf(self.xi1,self.xi2,self.sgals,levels_imgs,cmap=pl.cm.gray)
-        self.axesa.contour(self.xi1,self.xi2,g_source,levels,colors=('deepskyblue'))
-        self.axesa.contour(yi1,yi2,mua,0,colors=('r'),linewidths = 2.0)
+        data_pars = {
+            "name": "black",
+            "url": "http://raw.githubusercontent.com/linan7788626/linan7788626.github.io/master/images/black.png",
+            "source": {
+                "size": spar_new[2],
+                "x": spar_new[0],
+                "y": spar_new[1],
+                "ell": spar_new[4],
+                "ang": spar_new[5]
+            },
+            "lens": {
+                "theta_e": lpar_new[2],
+                "x": lpar_new[0],
+                "y": lpar_new[1],
+                "ell": lpar_new[4],
+                "ang": lpar_new[5],
+            }
+        }
 
-        self.axesb.clear()
-        self.axesb.set_xlim(x1_min,x1_max)
-        self.axesb.set_ylim(x2_min,x2_max)
-        self.axesb.set_xticks([xbc1-2.0,xbc1-1.0,xbc1,xbc1+1.0,xbc1+2.0])
-        self.axesb.set_yticks([xbc2-2.0,xbc2-1.0,xbc2,xbc2+1.0,xbc2+2.0])
-        self.axesb.contourf(self.xi1,self.xi2,self.lgals,levels_imgs,cmap=pl.cm.gray)
-        self.axesb.contour(self.xi1,self.xi2,g_limage,levels,colors=('deepskyblue'))
-        self.axesb.contour(self.xi1,self.xi2,mua,colors=('r'),linewidths = 2.0)
+        # Writing JSON data
+        f_out_pars = data_pars['name']+'.json'
+        with open(f_out_pars, 'w') as f:
+            json.dump(data_pars, f)
 
-        self.canvas.draw()
+        # # Reading data back
+        # with open(f_out_pars, 'r') as f:
+            # data = json.load(f)
 
-        print "opt----", spar_new
+        print "All parameters are saved in "+f_out_pars+"."
 
     def create_status_bar(self):
         self.status_text = QLabel("This is a statusbar")

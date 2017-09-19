@@ -13,6 +13,10 @@ def twoD_Gaussian((x, y), amplitude, xo, yo, sigma_x, sigma_y, theta, offset):
 
 def lensing_signals_sie(x1, x2, xc1, xc2, re, rc, q, phl):
 
+    if q >= 1.0 :
+        q = 1.0/q
+        phl = phl + 90
+
     phirad = np.deg2rad(phl)
     cosa = np.cos(phirad)
     sina = np.sin(phirad)
@@ -38,14 +42,6 @@ def lensing_signals_sie(x1, x2, xc1, xc2, re, rc, q, phl):
 
 def create_images((x1,x2),xc1,xc2,re,rc,ql,phl,yc1,yc2,sigs,amp,qs,phs):
 
-    if qs > 1.0 :
-        qs = 1.0/qs
-        phs = phs + 90
-
-    if ql > 1.0 :
-        ql = 1.0/ql
-        phl = phl + 90
-
     sig1 = sigs#/qs#*0.693
     sig2 = sigs*qs#*0.693
     al1, al2 = lensing_signals_sie(x1, x2, xc1, xc2, re, 0.0, ql, phl)
@@ -66,6 +62,19 @@ def optimize_pars(x1, x2, data, lpar_in, spar_in):
     popt, pcov = opt.curve_fit(create_images, (x1, x2), data, p0=initial_guess)
     lpar_new = popt[:6]
     spar_new = popt[6:]
+
+    if spar_new[4] >= 1.0 :
+        spar_new[4] = 1.0/spar_new[4]
+        spar_new[5] = spar_new[5] + 90
+
+    spar_new[5] = spar_new[5] % 180
+
+    if lpar_new[4] >= 1.0 :
+        lpar_new[4] = 1.0/lpar_new[4]
+        lpar_new[5] = lpar_new[5] + 90
+
+    lpar_new[5] = lpar_new[5] % 180
+
 
     return lpar_new, spar_new
 
