@@ -256,6 +256,34 @@ class AppForm(QMainWindow):
     def update_sbox_sa(self, value):
         self.sbox_sa.setValue(float(value) * sa_max / nbins)
 #-------
+    def update_sbox_pars(self, cosmo):
+        print cosmo
+        if cosmo == "Planck15":
+            self.h0 = 67.81
+            self.om = 0.308
+            self.ol = 0.692
+            self.sbox_h0.setValue(self.h0)
+            self.sbox_om.setValue(self.om)
+            self.sbox_ol.setValue(self.ol)
+
+        if cosmo == "WMP9":
+            self.h0 = 70.10
+            self.om = 0.278
+            self.ol = 0.722
+            self.sbox_h0.setValue(self.h0)
+            self.sbox_om.setValue(self.om)
+            self.sbox_ol.setValue(self.ol)
+
+        if cosmo == "Concordance":
+            self.h0 = 70.00
+            self.om = 0.300
+            self.ol = 0.700
+            self.sbox_h0.setValue(self.h0)
+            self.sbox_om.setValue(self.om)
+            self.sbox_ol.setValue(self.ol)
+
+
+#-------
 
     def create_main_frame(self):
         self.main_frame = QWidget()
@@ -287,8 +315,8 @@ class AppForm(QMainWindow):
         self.sbox_h0.setSingleStep(100/nsbox)
         self.sbox_h0.setFocusPolicy(Qt.StrongFocus)
         self.sbox_h0.setFixedWidth(sbox_len)
-        self.sbox_h0.setRange(0, 100)
-        self.sbox_h0.setValue(68)
+        self.sbox_h0.setRange(0, 100.0)
+        self.sbox_h0.setValue(67.81)
 
         self.sbox_label_om = QLabel(u'\u03a9'"<sub>m</sub>")
         self.sbox_label_om.setFixedWidth(20)
@@ -297,7 +325,7 @@ class AppForm(QMainWindow):
         self.sbox_om.setFocusPolicy(Qt.StrongFocus)
         self.sbox_om.setFixedWidth(sbox_len)
         self.sbox_om.setRange(0, 1.0)
-        self.sbox_om.setValue(0.3)
+        self.sbox_om.setValue(0.308)
 
         self.sbox_label_ol = QLabel(u'\u03a9'"<sub>"u'\u039b'"</sub>")
         self.sbox_label_ol.setFixedWidth(20)
@@ -306,11 +334,11 @@ class AppForm(QMainWindow):
         self.sbox_ol.setFocusPolicy(Qt.StrongFocus)
         self.sbox_ol.setFixedWidth(sbox_len)
         self.sbox_ol.setRange(0, 1.0)
-        self.sbox_ol.setValue(0.7)
+        self.sbox_ol.setValue(0.692)
 
         self.cb_cosmo = QComboBox()
-        self.cb_cosmo.addItems(["Planck15", "WMP9", "Concordance", "Einstein-deSitter"])
-        #self.cb_cosmo.currentIndexChanged.connect(self.selectionchange)
+        self.cb_cosmo.addItems(["Planck15", "WMP9", "Concordance"])
+        self.cb_cosmo.currentTextChanged.connect(self.update_sbox_pars)
 
         self.cb_models = QComboBox()
         self.cb_models.addItems(["SIE", "NFW", "PIEMD"])
