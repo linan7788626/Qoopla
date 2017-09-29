@@ -18,7 +18,7 @@ import ofits as ff
 
 
 bsz = 5.0 # (arcsec)
-nnn = 400
+nnn = 500
 dsx = bsz/nnn
 
 nbins = 200
@@ -71,20 +71,26 @@ class AppForm(QMainWindow):
         self.xi2 = np.linspace(x2_min, x2_max, nnn)
         self.xi1,self.xi2 = np.meshgrid(self.xi1,self.xi2)
 
-        self.file_name = "./ering.jpg"
-        a_tmp = Image.open(self.file_name)
-        a_tmp = np.array(a_tmp)
-        self.lgals = np.flipud(a_tmp[:,:,0]/256.0)
-
-        # self.file_name = "./ds9_images_500.png"
+        # self.file_name = "./ering.jpg"
         # a_tmp = Image.open(self.file_name)
         # a_tmp = np.array(a_tmp)
         # self.lgals = np.flipud(a_tmp[:,:,0]/256.0)
 
-        # self.srcs_name = "./ds9_srcs_500.png"
-        # s_tmp = Image.open(self.srcs_name)
-        # s_tmp = np.array(s_tmp)
-        # self.sgals = np.flipud(s_tmp[:,:,0]/256.0)
+        self.file_name = "./ds9_images.png"
+        a_tmp = Image.open(self.file_name)
+        a_tmp = np.array(a_tmp)
+        self.lgals = np.flipud(a_tmp[:,:,0]/256.0)
+
+        self.srcs_name = "./ds9_srcs.png"
+        s_tmp = Image.open(self.srcs_name)
+        s_tmp = np.array(s_tmp)
+        # # sgals_tmp = (s_tmp[:,:,0]+s_tmp[:,:,1]+s_tmp[:,:,2])/256.0/2.0
+        # # sgals_tmp = (s_tmp[:,:,0])/256.0
+        # self.sgals = self.lgals*0.0
+        # xoff = -15
+        # yoff = -10
+        # self.sgals[200+xoff:233+xoff,200+yoff:233+yoff] = sgals_tmp
+        self.sgals = np.flipud(s_tmp[:,:,0]/256.0)
 
         self.lpar = np.asarray([(st_x1*dpl + x1_min),
                                 (st_x2*dpl + x2_min),
@@ -97,8 +103,8 @@ class AppForm(QMainWindow):
         self.setWindowTitle('Interactive Lens Modeling')
 
         self.create_menu()
-        self.create_status_bar()
         self.create_main_frame()
+        self.create_status_bar()
 
         self.on_draw()
 
@@ -110,7 +116,7 @@ class AppForm(QMainWindow):
                         file_choices)
         if path:
             self.canvas.print_figure(path, dpi=self.dpi)
-            self.statusBar.showMessage('Saved to %s' % path, 2000)
+            self.statusBar().showMessage('Saved to %s' % path, 2000)
 
     def on_about(self):
         msg = """ A demo of using PyQt with matplotlib:
@@ -170,7 +176,7 @@ class AppForm(QMainWindow):
         self.axesa.set_ylim(y2_min,y2_max)
         self.axesa.set_xticks([ybc1-0.4, ybc1-0.2, ybc1, ybc1+0.2, ybc1+0.4])
         self.axesa.set_yticks([ybc2-0.4, ybc2-0.2, ybc2, ybc2+0.2, ybc2+0.4])
-        # self.axesa.contourf(self.xi1,self.xi2,self.sgals,levels_imgs,cmap=pl.cm.gray)
+        self.axesa.contourf(self.xi1,self.xi2,self.sgals,levels_imgs,cmap=pl.cm.gray)
         self.axesa.contour(self.xi1,self.xi2,g_source,levels,colors=('deepskyblue'))
         self.axesa.contour(yi1,yi2,mua,0,colors=('r'),linewidths = 2.0)
 
@@ -281,6 +287,8 @@ class AppForm(QMainWindow):
             self.sbox_h0.setValue(self.h0)
             self.sbox_om.setValue(self.om)
             self.sbox_ol.setValue(self.ol)
+
+
 #-------
 
     def create_main_frame(self):
@@ -601,15 +609,13 @@ class AppForm(QMainWindow):
         self.setCentralWidget(self.main_frame)
 
     def optimization_actions(self):
-
         print "Optimizing..."
-        self.statusBar.showMessage('Optimizing...')
-
         lpar_new, spar_new = ff.optimize_pars(self.xi1, self.xi2,
                                               self.lgals.ravel(),
                                               self.lpar, self.spar)
 
         g_limage,g_source,mua,yi1,yi2 = ll.lensed_images(self.xi1,self.xi2,lpar_new,spar_new)
+        print "Done."
 
         self.slider_re.setValue(round(lpar_new[2]/re_max*nbins))
         self.slider_x1.setValue(round((lpar_new[0]-x1_min)/dpl))
@@ -622,9 +628,6 @@ class AppForm(QMainWindow):
         self.slider_y2.setValue(round((spar_new[1]-y2_min)/dps))
         self.slider_qs.setValue(round(spar_new[4]/qs_max*nbins))
         self.slider_sa.setValue(round(spar_new[5]/sa_max*nbins))
-
-        print "Done."
-        self.statusBar.showMessage('Done')
 
         data_pars = {
             "name": "black",
@@ -646,7 +649,7 @@ class AppForm(QMainWindow):
         }
 
         # Writing JSON data
-        f_out_pars = "./josn_outputs/"+data_pars['name']+'.json'
+        f_out_pars = data_pars['name']+'.json'
         with open(f_out_pars, 'w') as f:
             json.dump(data_pars, f)
 
@@ -654,18 +657,11 @@ class AppForm(QMainWindow):
         # with open(f_out_pars, 'r') as f:
             # data = json.load(f)
 
-        self.statusBar.showMessage('Parameters are saved to %s' % f_out_pars)
-
+        print "All parameters are saved in "+f_out_pars+"."
 
     def create_status_bar(self):
-        # self.status_text = QLabel("Qoopla - Modeling Strong Lenses Interactively")
-        # self.statusBar().addWidget(self.status_text, 1)
-
-        self.statusBar = QStatusBar()
-        self.setStatusBar(self.statusBar)
-        self.statusBar.showMessage('Qoopla - Modeling Strong Lenses Interactively')
-        # self.statusBar.addWidget(self.status_text, 1)
-
+        self.status_text = QLabel("This is a statusbar")
+        self.statusBar().addWidget(self.status_text, 1)
 
     def create_menu(self):
         self.file_menu = self.menuBar().addMenu("&File")
