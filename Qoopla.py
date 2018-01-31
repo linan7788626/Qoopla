@@ -288,7 +288,7 @@ class AppForm(QMainWindow):
         #self.main_frame.resize(800, 400)
         self.main_frame.setFixedSize(820, 700)
 
-        self.dpi = 80
+        self.dpi = 40
         self.fig = pl.figure(num=None,figsize=(10,5), dpi=self.dpi, facecolor='w', edgecolor='k')
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_frame)
