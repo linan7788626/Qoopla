@@ -257,7 +257,7 @@ class AppForm(QMainWindow):
         self.sbox_sa.setValue(float(value) * sa_max / nbins)
 #-------
     def update_sbox_pars(self, cosmo):
-        print cosmo
+        # print cosmo
         if cosmo == "Planck15":
             self.h0 = 67.81
             self.om = 0.308
@@ -602,7 +602,7 @@ class AppForm(QMainWindow):
 
     def optimization_actions(self):
 
-        print "Optimizing..."
+        print("Optimizing...")
         self.statusBar.showMessage('Optimizing...')
 
         lpar_new, spar_new = ff.optimize_pars(self.xi1, self.xi2,
@@ -623,7 +623,7 @@ class AppForm(QMainWindow):
         self.slider_qs.setValue(round(spar_new[4]/qs_max*nbins))
         self.slider_sa.setValue(round(spar_new[5]/sa_max*nbins))
 
-        print "Done."
+        print("Done.")
         self.statusBar.showMessage('Done')
 
         data_pars = {
